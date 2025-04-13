@@ -1,8 +1,31 @@
 from django.db import models
 from djmoney.models.fields import MoneyField
 from django.utils.timezone import now
+from django.contrib.auth.models import AbstractUser
 
 
+class User(AbstractUser):
+    ROLE_CHOICES = [
+        ('customer', 'Customer'),
+        ('staff', 'Staff'),
+        ('admin', 'Admin'),
+    ]
+    
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='customer')
+
+    def __str__(self):
+        return self.username
+
+    def is_customer(self):
+        return self.role == 'customer'
+
+    def is_staff_user(self): 
+        return self.role == 'staff'
+
+    def is_admin(self):
+        return self.role == 'admin'
+        
+        
 class Shipment(models.Model):
     STATUS_CHOICES = [
         ('in_transit', 'In-transit'),
@@ -120,7 +143,7 @@ class Parcel(models.Model):
     
     charge = MoneyField(max_digits=14, decimal_places=2, default_currency='TZS')
     commodity_type = models.CharField(max_length=255, choices=COMMODITY_TYPE, default='parcel')
-    discription = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     payment = MoneyField(max_digits=14, decimal_places=2, default_currency='TZS')
 
     def formatted_weight(self):

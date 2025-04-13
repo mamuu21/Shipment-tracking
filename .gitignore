@@ -1,26 +1,35 @@
-# Python
+# Python-related
+*.pyc
 __pycache__/
-*.py[cod]
-
-# Environment
-.env
-.venv/
+*.pyo
+*.pyd
+env/
 venv/
-
-# Django
+ENV/
+.venv/
 *.sqlite3
-db.sqlite3
+
+# Django-related
 *.log
+db.sqlite3
 staticfiles/
 media/
 
-# IDEs & Editors
+# VSCode/PyCharm IDEs
 .vscode/
-*.idea/
+.idea/
 
-# Coverage reports
-htmlcov/
-.coverage
+# OS-related
+.DS_Store
+Thumbs.db
 
-# Migrations (if generated frequently)
+# Environment and secrets
+.env
+*.env
+secrets.json
+
+# Migration history (optional if you want to start fresh)
 */migrations/__pycache__/
+*/migrations/*.pyc
+*/migrations/*.pyo
+*/migrations/*.pyd

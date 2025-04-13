@@ -1,6 +1,17 @@
 from django.contrib import admin
 from .models import Shipment, Customer, Parcel, Document, Invoice
 
+from django.contrib.auth.admin import UserAdmin
+from .models import User
+
+class UserAdmin(UserAdmin):
+    model = User
+    list_display = ('email', 'username', 'role', 'is_staff', 'is_active')
+    fieldsets = UserAdmin.fieldsets + (
+        ('Role Info', {'fields': ('role',)}),
+    )
+admin.site.register(User, UserAdmin)
+
 
 class ShipmentAdmin(admin.ModelAdmin):
     list_display = ('shipment_no', 
@@ -15,7 +26,7 @@ class ShipmentAdmin(admin.ModelAdmin):
                     'steps',
                     'documents',
                     'status')
-    search_fields = ('shipment_no','vessel')
+    search_fields = ('shipment_no','vessel', 'status')
 
     def customers(self, obj):
         return obj.customers.count()  
@@ -44,21 +55,21 @@ class ShipmentAdmin(admin.ModelAdmin):
 
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'phone', 'shipment_number', 'parcel_numbers')
-    search_fields = ('name', 'shipment_number', 'phone', 'parcel_numbers')
+    search_fields = ('name', 'phone', 'shipment__shipment_no', 'parcels__parcel_no')
 
     def shipment_number(self, obj):
         return obj.shipment.shipment_no if obj.shipment else "No Shipment"
     shipment_number.short_description = 'Shipment No'
 
     def parcel_numbers(self, obj):
-        parcels = obj.parcels.all()  # Get all related parcels
+        parcels = obj.parcels.all()  
         return ", ".join(parcel.parcel_no for parcel in parcels) if parcels else "Container"
     parcel_numbers.short_description = 'Parcel No'
 
 
 class ParcelAdmin(admin.ModelAdmin):
     list_display = ('parcel_no', 'shipment_number', 'customer_name')
-    search_fields = ('parcel_no', 'customer_name', 'shipment_number')
+    search_fields = ('parcel_no', 'customer__name', 'shipment__shipment_no')
 
     def shipment_number(self, obj):
         return obj.shipment.shipment_no if obj.shipment else "No Shipment"

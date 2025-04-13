@@ -1,6 +1,13 @@
 from rest_framework import serializers
-from .models import Shipment, Customer, Parcel, Document, Invoice
+from .models import Shipment, Customer, Parcel, Document, Invoice, User
 
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+        read_only_fields = ['id']
+        
 
 class ShipmentSerializer(serializers.ModelSerializer):
     class Meta:
