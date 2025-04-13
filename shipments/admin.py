@@ -87,7 +87,6 @@ class InvoiceAdmin(admin.ModelAdmin):
     ordering = ('-issue_date',)
 
     def save_model(self, request, obj, form, change):
-        # Automatically calculate the final amount when saving the invoice
         obj.calculate_final_amount()
         super().save_model(request, obj, form, change)
         

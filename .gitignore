@@ -1,1 +1,26 @@
-ECHO is on.
+# Python
+__pycache__/
+*.py[cod]
+
+# Environment
+.env
+.venv/
+venv/
+
+# Django
+*.sqlite3
+db.sqlite3
+*.log
+staticfiles/
+media/
+
+# IDEs & Editors
+.vscode/
+*.idea/
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Migrations (if generated frequently)
+*/migrations/__pycache__/
