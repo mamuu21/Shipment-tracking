@@ -1,13 +1,23 @@
 from django.shortcuts import render
 
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics, permissions
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth import get_user_model
 
 from .models import Shipment, Customer, Parcel, Document, Invoice
-from .serializers import ShipmentSerializer, CustomerSerializer, ParcelSerializer, DocumentSerializer, InvoiceSerializer
+from .serializers import ShipmentSerializer, CustomerSerializer, ParcelSerializer, DocumentSerializer, InvoiceSerializer, RegisterSerializer
 from .permissions import IsAdmin, IsCustomer, IsStaff, IsAdminOrStaff
+
+
+User = get_user_model()
+
+# Register view
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
 
 
 # Role-based mixin for queryset logic

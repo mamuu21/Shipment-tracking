@@ -6,9 +6,9 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     ROLE_CHOICES = [
-        ('customer', 'Customer'),
-        ('staff', 'Staff'),
-        ('admin', 'Admin'),
+        ('Customer', 'Customer'),
+        ('Staff', 'Staff'),
+        ('Admin', 'Admin'),
     ]
     
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='customer')
@@ -28,15 +28,15 @@ class User(AbstractUser):
         
 class Shipment(models.Model):
     STATUS_CHOICES = [
-        ('in_transit', 'In-transit'),
-        ('delivered', 'Delivered')
+        ('In-transit', 'In-transit'),
+        ('Delivered', 'Delivered')
     ]
     
     TRANSPORT = [
-        ('air', 'Air'),
-        ('sea', 'Sea'),
-        ('road', 'Road'),
-        ('rail', 'Rail')
+        ('Air', 'Air'),
+        ('Sea', 'Sea'),
+        ('Road', 'Road'),
+        ('Rail', 'Rail')
     ]
     
     WEIGHT_UNITS = [
@@ -84,6 +84,10 @@ class Shipment(models.Model):
 
 
 class Customer(models.Model):
+    STATUS = [
+        ('Active', 'Active'),
+        ('Dormant', 'Dormant')
+    ]
     shipment = models.ForeignKey(
         Shipment, 
         on_delete=models.CASCADE, 
@@ -97,6 +101,8 @@ class Customer(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=20)
     address = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS, default='Active')
+    
 
     def __str__(self):
         return self.name
@@ -115,9 +121,9 @@ class Parcel(models.Model):
     ]
     
     COMMODITY_TYPE = [
-        ('box', 'Box'),
-        ('parcel', 'Parcel'),
-        ('envelope', 'Envelope')
+        ('Box', 'Box'),
+        ('Parcel', 'Parcel'),
+        ('Envelope', 'Envelope')
     ]
     
     parcel_no = models.CharField(max_length=100, primary_key=True)
@@ -158,11 +164,11 @@ class Parcel(models.Model):
 
 class Document(models.Model):
     DOCUMENT_TYPES = [
-        ('invoice', 'Invoice'),
-        ('bill_of_lading', 'Bill of Lading'),
-        ('customs_clearance', 'Customs Clearance'),
-        ('packing_list', 'Packing List'),
-        ('other', 'Other')
+        ('Invoice', 'Invoice'),
+        ('Bill_of_lading', 'Bill of Lading'),
+        ('Customs_clearance', 'Customs Clearance'),
+        ('Packing_list', 'Packing List'),
+        ('Other', 'Other')
     ]
 
     document_no = models.CharField(max_length=100, primary_key=True, default='DOC0001')
@@ -226,8 +232,8 @@ class Invoice(models.Model):
     final_amount = MoneyField(max_digits=14, decimal_places=2, default_currency='TZS')
     status = models.CharField(
         max_length=20,
-        choices=[('unpaid', 'Unpaid'), ('paid', 'Paid'), ('overdue', 'Overdue')],
-        default='unpaid'
+        choices=[('Pending', 'Pending'), ('Paid', 'Paid'), ('Overdue', 'Overdue')],
+        default='Pending'
     )
 
     def calculate_final_amount(self):

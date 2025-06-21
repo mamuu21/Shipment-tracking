@@ -1,14 +1,19 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenObtainPairView
 from .views import (
     ShipmentListCreateView, ShipmentDetailView,
     CustomerListCreateView, CustomerDetailView,
     ParcelListCreateView, ParcelDetailView,
     DocumentListCreateView, DocumentDetailView,
     InvoiceListCreateView, InvoiceDetailView,
+    RegisterView, 
 )
 
 
-urlpatterns = [   
+urlpatterns = [  
+    path("register/", RegisterView.as_view(), name="register"),
+    path('login/', TokenObtainPairView.as_view(), name='login' ),
+    
     path('shipments/', ShipmentListCreateView.as_view(), name='shipment-list-create'),
     path('shipments/<str:pk>/', ShipmentDetailView.as_view(), name='shipment-detail'),
     
