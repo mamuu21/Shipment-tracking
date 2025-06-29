@@ -24,7 +24,22 @@ class User(AbstractUser):
 
     def is_admin(self):
         return self.role == 'admin'
-        
+  
+  
+class Customer(models.Model):
+    STATUS = [
+        ('Active', 'Active'),
+        ('Dormant', 'Dormant')
+    ]
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    address = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS, default='Active')
+
+    def __str__(self):
+        return self.name
+    
         
 class Shipment(models.Model):
     STATUS_CHOICES = [
@@ -51,6 +66,12 @@ class Shipment(models.Model):
     ]
     
     shipment_no = models.CharField(max_length=100, primary_key=True)
+    # customer = models.ForeignKey(
+    #     Customer,
+    #     on_delete=models.CASCADE, 
+    #     related_name='shipments',
+    #     null=True, 
+    #     blank=True)
     transport = models.CharField(max_length=100, choices=TRANSPORT)
     vessel = models.CharField(max_length=250)
     
@@ -64,13 +85,15 @@ class Shipment(models.Model):
     destination = models.CharField(max_length=250)
     steps = models.PositiveBigIntegerField(default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    
+    def customers(self):
+        # Get all customers who have parcels in this shipment
+        return Customer.objects.filter(parcels__shipment=self).distinct()
 
     def customer_count(self):
-        """Dynamically count the number of customers in this shipment"""
-        return self.customers.count()
+        return self.customers().count()
     
     def parcel_count(self):
-        """Dynamically count the number of parcels in this shipment"""
         return self.parcels.count()
     
     def formatted_weight(self):
@@ -81,31 +104,6 @@ class Shipment(models.Model):
     
     def __str__(self):
         return self.shipment_no
-
-
-class Customer(models.Model):
-    STATUS = [
-        ('Active', 'Active'),
-        ('Dormant', 'Dormant')
-    ]
-    shipment = models.ForeignKey(
-        Shipment, 
-        on_delete=models.CASCADE, 
-        related_name='customers',
-        to_field='shipment_no', 
-        db_column='shipment_no',
-        null=True, 
-        blank=True)
-    
-    name = models.CharField(max_length=255)
-    email = models.EmailField()
-    phone = models.CharField(max_length=20)
-    address = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS, default='Active')
-    
-
-    def __str__(self):
-        return self.name
 
 
 class Parcel(models.Model):
@@ -134,12 +132,6 @@ class Parcel(models.Model):
         to_field='shipment_no',
         db_column='shipment_no')
     
-    weight = models.FloatField()
-    weight_unit = models.CharField(max_length=10, choices=WEIGHT_UNITS, default='kg')
-    
-    volume = models.FloatField()
-    volume_unit = models.CharField(max_length=10, choices=VOLUME_UNITS, default='m³')
-    
     customer = models.ForeignKey(
         Customer,
         on_delete=models.CASCADE,
@@ -147,10 +139,16 @@ class Parcel(models.Model):
         null=True,
         blank=True)
     
+    weight = models.FloatField()
+    weight_unit = models.CharField(max_length=10, choices=WEIGHT_UNITS, default='kg')
+    
+    volume = models.FloatField()
+    volume_unit = models.CharField(max_length=10, choices=VOLUME_UNITS, default='m³')
+    
     charge = MoneyField(max_digits=14, decimal_places=2, default_currency='TZS')
+    payment = models.CharField(max_length=20, choices=[('Paid', 'Paid'), ('Unpaid', 'Unpaid')], default='Unpaid')
     commodity_type = models.CharField(max_length=255, choices=COMMODITY_TYPE, default='parcel')
     description = models.TextField(blank=True, null=True)
-    payment = MoneyField(max_digits=14, decimal_places=2, default_currency='TZS')
 
     def formatted_weight(self):
         return f"{self.weight} {self.weight_unit}"
@@ -205,24 +203,9 @@ class Document(models.Model):
 
 class Invoice(models.Model):
     invoice_no = models.CharField(max_length=100, primary_key=True)
-    shipment = models.OneToOneField(
-        'Shipment',
-        on_delete=models.CASCADE,
-        related_name='invoices',
-        to_field='shipment_no',
-        db_column='shipment_no'
-    )
     customer = models.ForeignKey(
         'Customer',
         on_delete=models.CASCADE,
-        related_name='invoices'
-    )
-    parcel = models.ForeignKey(
-        'Parcel',
-        on_delete=models.SET_NULL,
-        db_column='parcel_no',
-        null=True,
-        blank=True,
         related_name='invoices'
     )
     issue_date = models.DateTimeField(auto_now_add=True)

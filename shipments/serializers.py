@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db.models import Sum
 from .models import Shipment, Customer, Parcel, Document, Invoice, User
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -32,22 +33,68 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
         
 
-class ShipmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Shipment
-        fields = '__all__'
-        
-        
 class CustomerSerializer(serializers.ModelSerializer):
+    total_invoices_paid = serializers.SerializerMethodField()
+    total_parcels = serializers.SerializerMethodField()
+    total_parcel_weight = serializers.SerializerMethodField()
+    total_shipments = serializers.SerializerMethodField()
+    shipment_nos = serializers.SerializerMethodField()
+    
     class Meta:
         model = Customer
-        fields = '__all__'
+        fields = ['id', 'name', 'email', 'address', 'phone', 'status',
+                  'total_invoices_paid', 'total_parcels', 'total_parcel_weight',
+                  'total_shipments', 'shipment_nos']
+        
+    def get_total_invoices_paid(self, obj):
+        return obj.invoices.filter(status='Pais').count()
+    
+    def get_total_parcels(self, obj):
+        return obj.parcels.count()
+    
+    def get_total_parcel_weight(self, obj):
+        total_weight = obj.parcels.aggregate(total=Sum('weight'))['total']
+        return total_weight or 0
+    
+    def get_total_shipments(self, obj):
+        return Shipment.objects.filter(parcels__customer=obj).distinct().count()
+    
+    def get_shipment_nos(self, obj):
+        shipments = Shipment.objects.filter(parcels__customer=obj).distinct()
+        return [s.shipment_no for s in shipments]
+    
+               
+
+class ShipmentSerializer(serializers.ModelSerializer):
+    customer_count = serializers.SerializerMethodField()
+    parcel_count = serializers.SerializerMethodField
+    
+    class Meta:
+        model = Shipment
+        fields = ['shipment_no', 'transport', 'vessel', 'origin', 'destination',
+            'weight', 'volume', 'steps', 'status',
+            'customer_count', 'parcel_count']
+        
+    def get_customer_count(self, obj):
+            return Customer.objects.filter(parcels__shipment=obj).distinct().count()
+
+    def get_parcel_count(self, obj):
+        return obj.parcels.count()
+
         
         
 class ParcelSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    customer_id = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.all(), source='customer', write_only=True
+    )
+    
     class Meta:
         model = Parcel
-        fields = '__all__'
+        fields = [
+            'parcel_no', 'shipment', 'customer', 'customer_id', 'weight', 'weight_unit',
+            'volume', 'volume_unit', 'charge', 'payment','commodity_type', 'description'
+        ]
         
         
 class DocumentSerializer(serializers.ModelSerializer):
